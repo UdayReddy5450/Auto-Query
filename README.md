@@ -74,7 +74,7 @@ Auto-Query/
 
 A visual overview of the system's database schema:
 
-![ER Diagram]([./Documentation/ERDiagram.png](https://github.com/UdayReddy5450/Auto-Query/blob/main/ERDiagram.png))
+https://github.com/UdayReddy5450/Auto-Query/blob/main/ERDiagram.png
 ---
 
 ## 💡 Outcomes
