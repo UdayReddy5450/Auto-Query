@@ -1,5 +1,5 @@
 
--- Create Database2
+-- Create Database
 CREATE DATABASE IF NOT EXISTS AUTOQUERY_DB;
 USE AUTOQUERY_DB;
 
