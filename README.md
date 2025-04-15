@@ -25,6 +25,21 @@ AutoQuery is a complete SQL Server project designed to manage vehicle registrati
 
 ## 📂 Repository Structure
 
+Auto-Query/
+│
+├── SQL Scripts/                      # All SQL code files
+│   ├── Tables.sql                   # Scripts to create core tables (Vehicles, Owners, Ownership)
+│   ├── StoredProcedures.sql         # Procedures for inserting, updating, and managing records
+│   ├── Triggers.sql                 # Triggers to log changes and ensure data integrity
+│   └── AuditTables.sql              # Audit table creation for logging historical changes
+│
+├── Documentation/                   # Project documentation and visual aids
+│   ├── ProjectDescription.md        # Brief technical summary of the project
+│   ├── ERDiagram.png                # Visual entity-relationship diagram 
+│       
+│
+├── README.md                        # Project overview and setup guide
+
 ---
 
 ## 🧱 Core Tables
@@ -53,6 +68,13 @@ AutoQuery is a complete SQL Server project designed to manage vehicle registrati
 
 - All actions are logged into the `VehicleOwnershipAudit` table for historical tracking and compliance.
 
+---
+
+## 🧩 ER Diagram
+
+A visual overview of the system's database schema:
+
+![ER Diagram](./Documentation/ERDiagram.png)
 ---
 
 ## 💡 Outcomes
