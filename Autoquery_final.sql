@@ -1,5 +1,5 @@
 
--- Create Database
+-- Create Database2
 CREATE DATABASE IF NOT EXISTS AUTOQUERY_DB;
 USE AUTOQUERY_DB;
 
@@ -319,9 +319,9 @@ INSERT INTO Accident_Reports (VehicleID, ReportDate, Description, DamageCost) VA
 (1010, '2022-05-05', 'Minor side collision', 3000.00);
 
 -- Stored Procedure - GetOwnerVehicleDetails - This procedure simplifies fetching owner and vehicle details by combining data from multiple tables, making the query more efficient and reusable.
-
+ 
 DELIMITER $$
-
+ 
 CREATE PROCEDURE GetOwnerVehicleDetails(IN ownerID INT)
 BEGIN
     SELECT 
@@ -338,42 +338,54 @@ BEGIN
         Registrations r ON o.OwnerID = r.OwnerID
     JOIN 
         Vehicles v ON r.VehicleID = v.VehicleID
-    WHERE 
-
+    WHERE
+ 
         o.OwnerID = ownerID;
 END $$
-
+ 
 DELIMITER ;
+ 
+-- Call the stored procedure for OwnerID = 1001
+CALL GetOwnerVehicleDetails(1001);
+
 -- 2. Get vehicle details by VIN - This procedure ensures consistent and efficient retrieval of vehicle details by VIN, centralizing the logic for easy maintenance.
 DELIMITER $$
-
 CREATE PROCEDURE GetVehicleDetailsByVIN(IN vin VARCHAR(20))
 BEGIN
     SELECT * 
     FROM Vehicles
-    WHERE VIN = vin;
+    WHERE VIN = vin
+    LIMIT 1;  -- Ensure only one result is returned
 END $$
-
 DELIMITER ;
+ 
+-- Call the stored procedure for VIN '1HGCM82633A123456'
+CALL GetVehicleDetailsByVIN('1HGCM82633A123456');
 
 -- 3. Get ownerdetails by OwnerID - It encapsulates the logic for retrieving an owner’s details by OwnerID, reducing redundancy and improving maintainability in the application.
-DELIMITER $$
 
+DELIMITER $$
+ 
 CREATE PROCEDURE GetOwnerDetailsByID(IN ownerID INT)
+
 BEGIN
     SELECT * 
     FROM Owners
-    WHERE OwnerID = ownerID;
+    WHERE OwnerID = ownerID
+    LIMIT 1;  -- Ensure only one record is returned
 END $$
-
+ 
 DELIMITER ;
 
+-- Call the stored procedure for VehicleID = 1001
+CALL GetOwnerDetailsByID(1001);
+ 
 -- 4. Get Vehicle Violation Summary
 -- It Provides total violations, total fine amount, and outstanding unpaid fines for a given vehicle.
 -- Fast summary report for law enforcement and compliance checking.
-
+ 
 DELIMITER $$
-
+ 
 CREATE PROCEDURE GetVehicleViolationSummary (IN in_VehicleID INT)
 BEGIN
     SELECT 
@@ -385,36 +397,36 @@ BEGIN
     WHERE VehicleID = in_VehicleID
     GROUP BY VehicleID;
 END $$
-
+ 
 DELIMITER ;
-
--- 5. Get Owner Payment History
--- It Fetches complete payment history for a specific owner, sorted by latest payment date.
--- Quick review of owner’s payment transactions for customer service and dispute resolution.
-
+ 
+-- Call the stored procedure for VehicleID = 1001
+CALL GetVehicleViolationSummary(1001);
+ 
+-- 5. GetTotalDamageCostByVehicle
+-- This procedure calculates the total damage cost for a specific vehicle based on accident reports.
+ 
 DELIMITER $$
-
-CREATE PROCEDURE GetOwnerPaymentHistory (IN in_OwnerID INT)
+ 
+CREATE PROCEDURE GetTotalDamageCostByVehicle(IN in_VehicleID INT)
 BEGIN
     SELECT 
-        PaymentID,
-        OwnerID,
-        Amount,
-        PaymentDate,
-        PaymentMethod,
-        Status
-    FROM Payments
-    WHERE OwnerID = in_OwnerID
-    ORDER BY PaymentDate DESC;
+        SUM(DamageCost) AS TotalDamageCost
+    FROM 
+        Accident_Reports
+    WHERE 
+        VehicleID = in_VehicleID;
 END $$
-
+ 
 DELIMITER ;
+-- Call the stored procedure for VehicleID = 1001
+CALL GetTotalDamageCostByVehicle(1001);
 
 -- FUNCTIONS 
 
 -- 1.Function: GetTotalFineAmount - This function calculates the total unpaid fine for a specific vehicle, providing an easy way to get financial data related to vehicle violations.
 DELIMITER $$
-
+ 
 CREATE FUNCTION GetTotalFineAmount(vehicleID INT) 
 RETURNS DECIMAL(10, 2)
 DETERMINISTIC
@@ -426,12 +438,15 @@ BEGIN
     WHERE VehicleID = vehicleID AND Status = 'Unpaid';
     RETURN IFNULL(totalFine, 0);
 END $$
-
+ 
 DELIMITER ;
+
+-- Call the function for VehicleID = 1001
+SELECT GetTotalFineAmount(1001);
 
 -- 2. Function: GetVehicleStatus - This function retrieves the current status of a vehicle, ensuring consistency in accessing vehicle status across different parts of the system.
 DELIMITER $$
-
+ 
 CREATE FUNCTION GetVehicleStatus(vehicleID INT) 
 RETURNS VARCHAR(50)
 DETERMINISTIC
@@ -440,11 +455,15 @@ BEGIN
     DECLARE vehicleStatus VARCHAR(50);
     SELECT Status INTO vehicleStatus
     FROM Vehicles
-    WHERE VehicleID = vehicleID;
+    WHERE VehicleID = vehicleID
+    LIMIT 1;  -- Ensure only one result is returned
     RETURN vehicleStatus;
 END $$
-
+ 
 DELIMITER ;
+
+-- Call the function for VehicleID = 1001
+SELECT GetVehicleStatus(1001);
 
 -- 3. Function: GetOwnerViolationCount -  returns the number of violations associated with a specific owner, centralizing the logic for violation counting and improving query reusability.
 DELIMITER $$
@@ -464,6 +483,9 @@ END $$
 
 DELIMITER ;
 
+-- Call the function for OwnerID = 1001
+SELECT GetOwnerViolationCount(1001);
+
 -- 4.Function Get total fines for a vehicle - This function calculates the total fines for a vehicle, simplifying financial reporting and enhancing the accuracy of fine data retrieval.
 DELIMITER $$
 
@@ -480,6 +502,9 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+-- Call the function for VehicleID = 1001
+SELECT GetTotalFines(1001);
 
 -- 5. Get owner vehicle count - This function returns the number of vehicles associated with an owner, streamlining ownership-related queries and improving performance.
 DELIMITER $$
@@ -498,6 +523,9 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+-- Call the function for OwnerID = 1001
+SELECT GetOwnerVehicleCount(1001);
 
 -- Triggers:
 -- 1.Auto update vehicle status on expired registration - This trigger automatically updates a vehicle’s status to “Suspended” when the registration expires, ensuring data consistency and reducing manual updates.
@@ -546,15 +574,22 @@ DELIMITER ;
 -- This trigger Logs any new payment into Payment_Audit table and Ensures traceability of all financial transactions for transparency.
 
 DELIMITER $$
-
+ 
 CREATE TRIGGER trg_AfterInsert_Payment
 AFTER INSERT ON Payments
 FOR EACH ROW
 BEGIN
+    -- Insert into the Payment_Audit table
     INSERT INTO Payment_Audit (PaymentID, OwnerID, Amount, PaymentDate, Status, ActionTaken)
-    VALUES (NEW.PaymentID, NEW.OwnerID, NEW.Amount, NEW.PaymentDate, NEW.Status, 'Inserted');
+    VALUES (
+        NEW.PaymentID, 
+        (SELECT OwnerID FROM Violations WHERE ViolationID = NEW.ViolationID),  -- Get OwnerID from Violations
+        NEW.Amount, 
+        NEW.PaymentDate, 
+        (SELECT Status FROM Violations WHERE ViolationID = NEW.ViolationID),  -- Get Status from Violations table
+        'Inserted'  -- Action taken when the payment is inserted
+    );
 END $$
-
 DELIMITER ;
 
 -- 5.Insurance Update Audit
@@ -633,6 +668,7 @@ CREATE TABLE Insurance_Audit (
     AuditTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+Show triggers;
 
 -- complex queries
 
@@ -743,6 +779,8 @@ WHERE s.ServiceDate = (
     FROM Service_Records 
     WHERE VehicleID = v.VehicleID
 );
+
+
 
 
 
